@@ -19,3 +19,9 @@ clean-targets:
 models:
   p8_dbt:
     +materialized: view
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: view

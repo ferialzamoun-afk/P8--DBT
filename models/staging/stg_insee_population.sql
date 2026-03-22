@@ -46,7 +46,19 @@ cleaned AS (
         region_name,
         CASE
             WHEN is_drom = 1 THEN 'DROM'
+            WHEN TRIM(region_name) IN ('Auvergne-Rhone-Alpes', 'Auvergne-Rhône-Alpes')
+                THEN 'Auvergne-Rhône-Alpes'
+            WHEN TRIM(region_name) IN ('Bourgogne-Franche-Comte', 'Bourgogne-Franche-Comté')
+                THEN 'Bourgogne-Franche-Comté'
             WHEN region_name = 'Centre-Val de Loire' THEN 'Centre-Val-de-Loire'
+            WHEN TRIM(region_name) IN ('Grand-Est', 'Grand Est')
+                THEN 'Grand Est'
+            WHEN TRIM(region_name) IN ('Ile-de-France', 'Île-de-France')
+                THEN 'Île-de-France'
+            WHEN TRIM(region_name) IN ('Pays-de-la-Loire', 'Pays de la Loire')
+                THEN 'Pays de la Loire'
+            WHEN TRIM(region_name) IN ('Provence-Alpes-Cote-d-Azur', 'Provence-Alpes-Côte d''Azur')
+                THEN 'Provence-Alpes-Côte d''Azur'
             ELSE NULLIF(TRIM(region_name), '')
         END AS region_name_standardized,
         CASE

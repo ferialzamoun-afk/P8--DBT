@@ -1,6 +1,6 @@
 -- Nettoyage et harmonisation des données étudiants
 -- Transformations:
---   1. Harmoniser les régions (DOM → DROM)
+--   1. Harmoniser les régions (DOM → DROM, accents/tirets)
 --   2. Normaliser les tranches d'âge (30 à 34 ans → 30-34 ans)
 --   3. Agréger "60 ans ou plus"
 
@@ -30,15 +30,26 @@ normalized AS (
             ELSE 'Non renseigné'
         END AS GENDER,
         
-        -- Harmonisation des régions (DOM → DROM)
+        -- Harmonisation des régions vers un libellé canonique unique
         CASE
             WHEN TRIM(REGION) IN ('Guadeloupe', 'Martinique', 'Réunion', 'La Réunion', 'Guyane')
                 THEN 'DROM'
             WHEN TRIM(REGION) = 'DOM'
                 THEN 'DROM'
-            -- Harmonisation des accents/tirets pour les jointures INSEE
+            WHEN TRIM(REGION) IN ('Auvergne-Rhone-Alpes', 'Auvergne-Rhône-Alpes')
+                THEN 'Auvergne-Rhône-Alpes'
+            WHEN TRIM(REGION) IN ('Bourgogne-Franche-Comte', 'Bourgogne-Franche-Comté')
+                THEN 'Bourgogne-Franche-Comté'
             WHEN TRIM(REGION) = 'Centre-Val de Loire'
                 THEN 'Centre-Val-de-Loire'
+            WHEN TRIM(REGION) IN ('Grand-Est', 'Grand Est')
+                THEN 'Grand Est'
+            WHEN TRIM(REGION) IN ('Ile-de-France', 'Île-de-France')
+                THEN 'Île-de-France'
+            WHEN TRIM(REGION) IN ('Pays-de-la-Loire', 'Pays de la Loire')
+                THEN 'Pays de la Loire'
+            WHEN TRIM(REGION) IN ('Provence-Alpes-Cote-d-Azur', 'Provence-Alpes-Côte d''Azur')
+                THEN 'Provence-Alpes-Côte d''Azur'
             ELSE NULLIF(TRIM(REGION), '')
         END AS REGION,
         

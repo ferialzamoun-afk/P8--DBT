@@ -49,9 +49,10 @@ merged AS (
         COALESCE(e.nb_etudiants, 0) AS nb_etudiants,
         COALESCE(i.population_insee, 0) AS population_insee,
         CASE
-            WHEN e.year IS NOT NULL AND i.year IS NOT NULL THEN 'matched'
-            WHEN e.year IS NOT NULL THEN 'etudiants_only'
-            ELSE 'insee_only'
+            WHEN e.nb_etudiants IS NOT NULL AND i.population_insee IS NOT NULL THEN 'matched'
+            WHEN e.nb_etudiants IS NOT NULL AND i.population_insee IS NULL THEN 'etudiants_only'
+            WHEN e.nb_etudiants IS NULL AND i.population_insee IS NOT NULL THEN 'insee_only'
+            ELSE NULL
         END AS join_scope,
         SUM(COALESCE(e.nb_etudiants, 0)) OVER (
             PARTITION BY COALESCE(e.year, i.year), COALESCE(e.region, i.region)

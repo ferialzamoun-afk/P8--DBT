@@ -1,0 +1,13 @@
+logs/
+target/
+dbt_packages/
+
+# Python / notebooks
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Local analysis exports
+exports/
+outputs/
+*.parquet

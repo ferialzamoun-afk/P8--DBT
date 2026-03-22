@@ -44,6 +44,7 @@ cleaned AS (
         TRY_TO_NUMBER(year) AS year,
         region_code,
         region_name,
+        -- Normaliser les variantes accent/tiret pour fiabiliser les jointures inter-couches
         CASE
             WHEN is_drom = 1 THEN 'DROM'
             WHEN TRIM(region_name) IN ('Auvergne-Rhone-Alpes', 'Auvergne-Rhône-Alpes')

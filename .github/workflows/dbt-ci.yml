@@ -1,0 +1,173 @@
+name: dbt CI/CD
+
+on:
+	push:
+		branches:
+			- main
+			- develop
+		paths:
+			- 'models/**'
+			- 'tests/**'
+			- 'macros/**'
+			- 'seeds/**'
+			- 'snapshots/**'
+			- 'dbt_project.yml'
+			- 'packages.yml'
+			- 'profiles.yml'
+			- '.github/workflows/dbt-ci.yml'
+	pull_request:
+		branches:
+			- main
+		paths:
+			- 'models/**'
+			- 'tests/**'
+			- 'macros/**'
+			- 'seeds/**'
+			- 'snapshots/**'
+			- 'dbt_project.yml'
+			- 'packages.yml'
+			- 'profiles.yml'
+			- '.github/workflows/dbt-ci.yml'
+	workflow_dispatch:
+
+defaults:
+	run:
+		working-directory: .
+
+jobs:
+	lint-compile:
+		name: "Lint & Compile"
+		runs-on: ubuntu-latest
+
+		steps:
+			- name: Checkout
+				uses: actions/checkout@v4
+
+			- name: Setup Python
+				uses: actions/setup-python@v5
+				with:
+					python-version: "3.11"
+					cache: pip
+
+			- name: Install dbt-snowflake
+				run: pip install dbt-snowflake==1.11.3
+
+			- name: dbt deps
+				run: dbt deps
+
+			- name: dbt parse
+				env:
+					SNOWFLAKE_ACCOUNT: "dummy"
+					SNOWFLAKE_USER: "dummy"
+					SNOWFLAKE_PASSWORD: "dummy"
+					SNOWFLAKE_ROLE: "ANALYST"
+					SNOWFLAKE_WAREHOUSE: "COMPUTE_WH"
+					SNOWFLAKE_DATABASE: "P8_OPENCLASSROOMS"
+					SNOWFLAKE_SCHEMA: "DBT_CI"
+					DBT_PROFILES_DIR: "."
+				run: dbt parse --profiles-dir . --target ci
+
+	build:
+		name: "dbt Build (run + test)"
+		runs-on: ubuntu-latest
+		needs: lint-compile
+		if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+		steps:
+			- name: Checkout
+				uses: actions/checkout@v4
+
+			- name: Setup Python
+				uses: actions/setup-python@v5
+				with:
+					python-version: "3.11"
+					cache: pip
+
+			- name: Install dbt-snowflake
+				run: pip install dbt-snowflake==1.11.3
+
+			- name: dbt deps
+				run: dbt deps
+
+			- name: dbt run - staging
+				env: &snowflake_env
+					SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+					SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+					SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+					SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+					SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+					SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+					SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+					DBT_PROFILES_DIR: "."
+				run: dbt run --profiles-dir . --target ci --select staging
+
+			- name: dbt test - staging
+				env: *snowflake_env
+				run: dbt test --profiles-dir . --target ci --select staging
+
+			- name: dbt run - intermediate
+				env: *snowflake_env
+				run: dbt run --profiles-dir . --target ci --select intermediate
+
+			- name: dbt build - marts
+				env: *snowflake_env
+				run: dbt build --profiles-dir . --target ci --select marts
+
+			- name: Upload run artifacts
+				if: always()
+				uses: actions/upload-artifact@v4
+				with:
+					name: dbt-artifacts-${{ github.run_id }}
+					path: |
+						target/run_results.json
+						target/manifest.json
+					retention-days: 30
+
+	export-csv:
+		name: "Export marts -> CSV"
+		runs-on: ubuntu-latest
+		needs: build
+		if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+		steps:
+			- name: Checkout
+				uses: actions/checkout@v4
+
+			- name: Setup Python
+				uses: actions/setup-python@v5
+				with:
+					python-version: "3.11"
+					cache: pip
+
+			- name: Install dbt-snowflake
+				run: pip install dbt-snowflake==1.11.3
+
+			- name: dbt deps
+				run: dbt deps
+
+			- name: Ensure export folder exists
+				run: New-Item -ItemType Directory -Force output/csv | Out-Null
+
+			- name: Export fct_export_unifie
+				shell: bash
+				env: &snowflake_env_export
+					SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+					SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+					SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+					SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+					SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+					SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+					SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+					DBT_PROFILES_DIR: "."
+				run: |
+					dbt show --profiles-dir . --target ci \
+						--quiet --select fct_export_unifie \
+						--output csv --limit 2000000 \
+						> output/csv/fct_export_unifie.csv
+
+			- name: Upload CSV export
+				uses: actions/upload-artifact@v4
+				with:
+					name: marts-csv-${{ github.run_id }}
+					path: output/csv/fct_export_unifie.csv
+					retention-days: 90

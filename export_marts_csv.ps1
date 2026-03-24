@@ -4,7 +4,7 @@
 .DESCRIPTION
     Pour chaque modèle mart, exécute :
       1. dbt run --select <model>  -> matérialise la table dans Snowflake
-      2. dbt show -q --select <model> --output csv --limit 2000000 -> exporte le CSV
+            2. dbt show -q --select <model> --output json --limit 2000000, puis conversion en CSV
     Les fichiers sont écrits dans ../exports/ (relatif au projet dbt).
 .NOTES
     Prérequis : variables d'environnement Snowflake chargées (load-env.ps1)
@@ -30,6 +30,68 @@ if (-not (Test-Path $dbt)) {
 $ExportsPath = [System.IO.Path]::GetFullPath((Join-Path $ScriptDir $ExportsDir))
 if (-not (Test-Path $ExportsPath)) {
     New-Item -ItemType Directory -Path $ExportsPath | Out-Null
+}
+
+function Get-DbtShowRows {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Node
+    )
+
+    if ($null -eq $Node) {
+        return @()
+    }
+
+    if ($Node -is [System.Collections.IEnumerable] -and -not ($Node -is [string])) {
+        $items = @($Node)
+        if ($items.Count -gt 0 -and $items[0] -is [pscustomobject]) {
+            return $items
+        }
+
+        foreach ($item in $items) {
+            $rows = Get-DbtShowRows -Node $item
+            if ($rows.Count -gt 0) {
+                return $rows
+            }
+        }
+        return @()
+    }
+
+    if ($Node -is [pscustomobject]) {
+        if ($Node.PSObject.Properties['show']) {
+            $rows = Get-DbtShowRows -Node $Node.show
+            if ($rows.Count -gt 0) {
+                return $rows
+            }
+        }
+
+        $rowsProp = $Node.PSObject.Properties['rows']
+        $colsProp = if ($Node.PSObject.Properties['column_names']) { $Node.PSObject.Properties['column_names'] } else { $Node.PSObject.Properties['columns'] }
+        if ($rowsProp -and $colsProp) {
+            $rawRows = @($rowsProp.Value)
+            $rawCols = @($colsProp.Value)
+            if ($rawRows.Count -gt 0 -and $rawCols.Count -gt 0) {
+                $converted = foreach ($rawRow in $rawRows) {
+                    $values = @($rawRow)
+                    $obj = [ordered]@{}
+                    for ($i = 0; $i -lt $rawCols.Count; $i++) {
+                        $obj[$rawCols[$i]] = if ($i -lt $values.Count) { $values[$i] } else { $null }
+                    }
+                    [pscustomobject]$obj
+                }
+                return @($converted)
+            }
+        }
+
+        foreach ($prop in $Node.PSObject.Properties) {
+            $rows = Get-DbtShowRows -Node $prop.Value
+            if ($rows.Count -gt 0) {
+                return $rows
+            }
+        }
+    }
+
+    return @()
 }
 
 $model   = "fct_export_unifie"
@@ -59,24 +121,54 @@ Write-Host ""
 # ── 2. Export en CSV via dbt show ─────────────────────────────────────────────
 Write-Host "▶ Export CSV  →  $outFile" -ForegroundColor Yellow
 
-& $dbt show `
+$showOutput = & $dbt show `
     --project-dir $ScriptDir `
     --profiles-dir $ProfilesDir `
     --target dev_password `
     --quiet `
     --select $model `
-    --output csv `
-    --limit $Limit 2>&1 `
-    | Where-Object { $_ -notmatch "^Running with dbt|^Found |^Concurrency|^$" } `
-    | Out-File -FilePath $outFile -Encoding utf8
+    --output json `
+    --limit $Limit 2>&1
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Erreur lors de l'export du modèle $model."
     exit 1
 }
 
-$rows = (Import-Csv $outFile).Count
-Write-Host "   ✓ $rows lignes exportées" -ForegroundColor Green
+$jsonObjects = @()
+foreach ($line in $showOutput) {
+    if ([string]::IsNullOrWhiteSpace($line)) {
+        continue
+    }
+    try {
+        $jsonObjects += ($line | ConvertFrom-Json -Depth 100)
+    }
+    catch {
+        continue
+    }
+}
+
+if ($jsonObjects.Count -eq 0) {
+    Write-Error "Aucun JSON exploitable trouvé dans la sortie de dbt show."
+    exit 1
+}
+
+$rows = @()
+foreach ($obj in $jsonObjects) {
+    $rows = Get-DbtShowRows -Node $obj
+    if ($rows.Count -gt 0) {
+        break
+    }
+}
+
+if ($rows.Count -eq 0) {
+    Write-Error "Aucune donnée tabulaire trouvée dans la sortie JSON de dbt show."
+    exit 1
+}
+
+$rows | Export-Csv -Path $outFile -NoTypeInformation -Encoding utf8
+
+Write-Host "   ✓ $($rows.Count) lignes exportées" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "=== Export terminé ===" -ForegroundColor Cyan

@@ -159,8 +159,69 @@ jobs:
         run: |
           dbt show --profiles-dir . --target ci \
             --quiet --select fct_export_unifie \
-            --output csv --limit 2000000 \
-            > output/csv/fct_export_unifie.csv
+            --output json --limit 2000000 \
+            > output/csv/fct_export_unifie.jsonl
+
+          python - <<'PY'
+          import csv
+          import json
+          from pathlib import Path
+
+          src = Path("output/csv/fct_export_unifie.jsonl")
+          dst = Path("output/csv/fct_export_unifie.csv")
+
+          def extract_rows(node):
+              if isinstance(node, list):
+                  if node and all(isinstance(item, dict) for item in node):
+                      return node
+                  for item in node:
+                      rows = extract_rows(item)
+                      if rows:
+                          return rows
+                  return []
+
+              if isinstance(node, dict):
+                  if "show" in node:
+                      rows = extract_rows(node["show"])
+                      if rows:
+                          return rows
+
+                  rows = node.get("rows")
+                  cols = node.get("column_names") or node.get("columns")
+                  if isinstance(rows, list) and isinstance(cols, list):
+                      if rows and all(isinstance(r, list) for r in rows):
+                          return [dict(zip(cols, r)) for r in rows]
+
+                  for value in node.values():
+                      rows = extract_rows(value)
+                      if rows:
+                          return rows
+
+              return []
+
+          rows = []
+          with src.open("r", encoding="utf-8") as fh:
+              for line in fh:
+                  line = line.strip()
+                  if not line:
+                      continue
+                  try:
+                      payload = json.loads(line)
+                  except json.JSONDecodeError:
+                      continue
+                  rows = extract_rows(payload)
+                  if rows:
+                      break
+
+          if not rows:
+              raise SystemExit("No tabular data found in dbt show JSON output")
+
+          fieldnames = list(rows[0].keys())
+          with dst.open("w", encoding="utf-8", newline="") as fh:
+              writer = csv.DictWriter(fh, fieldnames=fieldnames)
+              writer.writeheader()
+              writer.writerows(rows)
+          PY
 
       - name: Upload CSV export
         uses: actions/upload-artifact@v4

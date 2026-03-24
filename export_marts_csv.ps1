@@ -35,21 +35,22 @@ if (-not (Test-Path $ExportsPath)) {
 function Get-DbtShowRows {
     param(
         [Parameter(Mandatory = $true)]
-        $Node
+        $Node,
+        [int]$Depth = 0
     )
 
-    if ($null -eq $Node) {
+    if ($null -eq $Node -or $Depth -gt 10) {
         return @()
     }
 
     if ($Node -is [System.Collections.IEnumerable] -and -not ($Node -is [string])) {
         $items = @($Node)
         if ($items.Count -gt 0 -and $items[0] -is [pscustomobject]) {
-            return $items
+            return @($items | Where-Object { $_ -is [pscustomobject] })
         }
 
         foreach ($item in $items) {
-            $rows = Get-DbtShowRows -Node $item
+            $rows = Get-DbtShowRows -Node $item -Depth ($Depth + 1)
             if ($rows.Count -gt 0) {
                 return $rows
             }
@@ -58,19 +59,19 @@ function Get-DbtShowRows {
     }
 
     if ($Node -is [pscustomobject]) {
-        if ($Node.PSObject.Properties['show']) {
-            $rows = Get-DbtShowRows -Node $Node.show
+        if ($Node.PSObject.Properties['show'] -and $Node.show) {
+            $rows = Get-DbtShowRows -Node $Node.show -Depth ($Depth + 1)
             if ($rows.Count -gt 0) {
                 return $rows
             }
         }
 
         $rowsProp = $Node.PSObject.Properties['rows']
-        $colsProp = if ($Node.PSObject.Properties['column_names']) { $Node.PSObject.Properties['column_names'] } else { $Node.PSObject.Properties['columns'] }
+        $colsProp = if ($Node.PSObject.Properties['column_names']) { $Node.column_names } elseif ($Node.PSObject.Properties['columns']) { $Node.columns } else { $null }
         if ($rowsProp -and $colsProp) {
             $rawRows = @($rowsProp.Value)
-            $rawCols = @($colsProp.Value)
-            if ($rawRows.Count -gt 0 -and $rawCols.Count -gt 0) {
+            $rawCols = @($colsProp) | ForEach-Object { @($_) } | ForEach-Object { @($_) }
+            if ($rawRows.Count -gt 0 -and ($rawCols | Measure-Object).Count -gt 0) {
                 $converted = foreach ($rawRow in $rawRows) {
                     $values = @($rawRow)
                     $obj = [ordered]@{}
@@ -83,10 +84,29 @@ function Get-DbtShowRows {
             }
         }
 
+        $dataProp = $Node.PSObject.Properties['data']
+        if ($dataProp -and $dataProp.Value -is [System.Collections.IEnumerable]) {
+            $dataItems = @($dataProp.Value)
+            if ($dataItems.Count -gt 0 -and ($dataItems[0] -is [pscustomobject])) {
+                return @($dataItems)
+            }
+        }
+
+        foreach ($key in @("results", "result", "records", "items")) {
+            if ($Node.PSObject.Properties[$key] -and $Node.($key)) {
+                $rows = Get-DbtShowRows -Node $Node.($key) -Depth ($Depth + 1)
+                if ($rows.Count -gt 0) {
+                    return $rows
+                }
+            }
+        }
+
         foreach ($prop in $Node.PSObject.Properties) {
-            $rows = Get-DbtShowRows -Node $prop.Value
-            if ($rows.Count -gt 0) {
-                return $rows
+            if ($prop.Value -is [pscustomobject] -or ($prop.Value -is [System.Collections.IEnumerable] -and -not ($prop.Value -is [string]))) {
+                $rows = Get-DbtShowRows -Node $prop.Value -Depth ($Depth + 1)
+                if ($rows.Count -gt 0) {
+                    return $rows
+                }
             }
         }
     }

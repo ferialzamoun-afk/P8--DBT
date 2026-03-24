@@ -3,6 +3,7 @@ target/
 dbt_packages/
 
 # Python / notebooks
+.env/
 .venv/
 __pycache__/
 .ipynb_checkpoints/

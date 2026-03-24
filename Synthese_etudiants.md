@@ -359,7 +359,7 @@ SELECT * FROM VOTRE_SCHEMA.FCT_PROFIL_SOCIODEM;
 
 ### Par dimension temporelle
 - Évolution du nombre d'inscrits par année
-- Tendance des tranches d'âge (rajeunissement ? vieillissement ?)
+- Tendance des tranches d'âge (rajeunissement ? vieillissement ?) 
 
 ### Par dimension géographique
 - Répartition régionale vs population française (INSEE)

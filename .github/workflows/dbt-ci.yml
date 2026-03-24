@@ -1,4 +1,4 @@
-﻿name: dbt CI/CD
+name: dbt CI/CD
 
 on:
   push:
@@ -171,4 +171,3 @@ jobs:
           name: marts-csv-${{ github.run_id }}
           path: output/csv/fct_export_unifie.csv
           retention-days: 90
-

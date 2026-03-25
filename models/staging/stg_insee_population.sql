@@ -1,0 +1,110 @@
+-- Nettoyage et dépivotage des données INSEE
+-- Transforme le format large (colonnes par genre/âge) en format long (une ligne par année/région/âge/genre)
+
+WITH source AS (
+    SELECT * FROM {{ source('raw_data', 'insee_population_enrichi') }}
+),
+
+-- Dépivotage : transformer les colonnes ensemble_*, hommes_*, femmes_* en lignes
+-- Inclure IS_DROM et DROM_GROUP dans toutes les sélections
+unpivoted AS (
+    SELECT year, region_code, region_name, is_drom, drom_group, '0-19 ans' AS age_group_insee, 'ALL' AS gender_insee, ensemble_0_19 AS population FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '20-39 ans', 'ALL', ensemble_20_39 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '40-59 ans', 'ALL', ensemble_40_59 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '60-74 ans', 'ALL', ensemble_60_74 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '75+ ans', 'ALL', ensemble_75_plus FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '0-19 ans', 'M', hommes_0_19 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '20-39 ans', 'M', hommes_20_39 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '40-59 ans', 'M', hommes_40_59 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '60-74 ans', 'M', hommes_60_74 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '75+ ans', 'M', hommes_75_plus FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '0-19 ans', 'F', femmes_0_19 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '20-39 ans', 'F', femmes_20_39 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '40-59 ans', 'F', femmes_40_59 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '60-74 ans', 'F', femmes_60_74 FROM source
+    UNION ALL
+    SELECT year, region_code, region_name, is_drom, drom_group, '75+ ans', 'F', femmes_75_plus FROM source
+),
+
+cleaned AS (
+    SELECT
+        TRY_TO_NUMBER(year) AS year,
+        region_code,
+        region_name,
+        -- Normaliser les variantes accent/tiret/casse pour fiabiliser les jointures inter-couches
+        CASE
+            WHEN is_drom = 1 THEN 'DROM'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) IN ('GUADELOUPE', 'MARTINIQUE', 'REUNION', 'LAREUNION', 'GUYANE', 'DOM', 'DROM')
+                THEN 'DROM'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) = 'AUVERGNERHONEALPES'
+                THEN 'Auvergne-Rhône-Alpes'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) = 'BOURGOGNEFRANCHECOMTE'
+                THEN 'Bourgogne-Franche-Comté'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) = 'CENTREVALDELOIRE'
+                THEN 'Centre-Val-de-Loire'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) = 'GRANDEST'
+                THEN 'Grand Est'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) = 'ILEDEFRANCE'
+                THEN 'Île-de-France'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) = 'PAYSDELALOIRE'
+                THEN 'Pays de la Loire'
+            WHEN REGEXP_REPLACE(
+                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
+                '[^A-Z0-9]', ''
+            ) = 'PROVENCEALPESCOTEDAZUR'
+                THEN 'Provence-Alpes-Côte d''Azur'
+            ELSE NULLIF(TRIM(region_name), '')
+        END AS region_name_standardized,
+        CASE
+            WHEN age_group_insee IN ('60-74 ans', '75+ ans') THEN '60+ ans'
+            ELSE age_group_insee
+        END AS age_group_insee,
+        gender_insee,
+        TRY_TO_NUMBER(population) AS population,
+        is_drom,
+        drom_group
+    FROM unpivoted
+    WHERE population IS NOT NULL
+)
+
+SELECT *
+FROM cleaned
+WHERE year IN (2022, 2023, 2024, 2025)
+  AND region_name_standardized IS NOT NULL
+    AND age_group_insee IN ('0-19 ans', '20-39 ans', '40-59 ans', '60+ ans')
+  AND gender_insee IN ('M', 'F', 'ALL')
+  AND population IS NOT NULL

@@ -1,0 +1,77 @@
+version: 2
+
+sources:
+  - name: raw_data
+    description: "Données brutes importées dans Snowflake"
+    database: P8_OPENCLASSROOMS
+    schema: RAW_DATA
+    tables:
+      - name: etudiants
+        description: "Données sociodémographiques des étudiants Data OC"
+        columns:
+          - name: USER_ID
+            description: "Identifiant technique unique de l'étudiant"
+          - name: PATH_CATEGORY_NAME
+            description: "Catégorie du parcours suivi (Data)"
+          - name: AGE_GROUP
+            description: "Classe d'âge au moment du début du parcours"
+          - name: GENDER
+            description: "Genre déclaré par l'étudiant (F/M ou vide)"
+          - name: REGION
+            description: "Région de résidence"
+          - name: YEAR_PATH_STARTED
+            description: "Année de début du parcours"
+      
+      - name: insee_population_enrichi
+        description: "Données INSEE population par département, année, sexe et classe d'âge (2022-2025)"
+        columns:
+          - name: year
+            description: "Année de l'estimation"
+          - name: department_code
+            description: "Code département (01-95, 971, 972, 973, 974, 976)"
+          - name: department_name
+            description: "Nom du département"
+          - name: ensemble_0_19
+            description: "Population totale 0-19 ans"
+          - name: ensemble_20_39
+            description: "Population totale 20-39 ans"
+          - name: ensemble_40_59
+            description: "Population totale 40-59 ans"
+          - name: ensemble_60_74
+            description: "Population totale 60-74 ans"
+          - name: ensemble_75_plus
+            description: "Population totale 75+ ans"
+          - name: ensemble_total
+            description: "Population totale"
+          - name: hommes_0_19
+            description: "Hommes 0-19 ans"
+          - name: hommes_20_39
+            description: "Hommes 20-39 ans"
+          - name: hommes_40_59
+            description: "Hommes 40-59 ans"
+          - name: hommes_60_74
+            description: "Hommes 60-74 ans"
+          - name: hommes_75_plus
+            description: "Hommes 75+ ans"
+          - name: hommes_total
+            description: "Hommes total"
+          - name: femmes_0_19
+            description: "Femmes 0-19 ans"
+          - name: femmes_20_39
+            description: "Femmes 20-39 ans"
+          - name: femmes_40_59
+            description: "Femmes 40-59 ans"
+          - name: femmes_60_74
+            description: "Femmes 60-74 ans"
+          - name: femmes_75_plus
+            description: "Femmes 75+ ans"
+          - name: femmes_total
+            description: "Femmes total"
+          - name: region_code
+            description: "Code région harmonisé"
+          - name: region_name
+            description: "Nom région harmonisé"
+          - name: is_drom
+            description: "Indicateur DROM (0/1)"
+          - name: drom_group
+            description: "Groupe DROM si applicable"

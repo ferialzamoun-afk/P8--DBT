@@ -1,3 +1,4 @@
+
 # Fichiers/dossiers à ignorer pour P8--DBT
 logs/
 output/
@@ -76,4 +77,19 @@ exports/*/
 outputs/*.csv
 outputs/*.parquet
 !outputs/.gitkeep
+
+=======
+logs/
+target/
+dbt_packages/
+
+# Python / notebooks
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+
+# Local analysis exports
+exports/
+outputs/
+*.parquet
 

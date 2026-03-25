@@ -1,0 +1,79 @@
+# Fichiers/dossiers à ignorer pour P8--DBT
+logs/
+output/
+target/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.sqlite3
+*.db
+*.log
+*.csv
+*.parquet
+*.xlsx
+*.ipynb_checkpoints/
+dbt_packages/
+node_modules/
+/.mypy_cache/
+/.pytest_cache/
+/.vscode/
+exports/save/
+exports/*.csv
+outputs/*.csv
+# Secrets & Credentials
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.pfx
+*.p12
+
+# Python
+.venv/
+venv/
+env/
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# dbt
+target/
+dbt_packages/
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local development
+*.sqlite
+*.db
+.streamlit/secrets.toml
+
+# Snowflake profiles (contain credentials)
+# Note: profiles.yml in P8--DBT/ should use env vars
+P8--DBT/profiles.yml
+~/.dbt/profiles.yml
+
+# Sensitive data
+exports/*/
+outputs/*.csv
+outputs/*.parquet
+!outputs/.gitkeep
+

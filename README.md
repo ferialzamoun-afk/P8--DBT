@@ -259,16 +259,16 @@ dbt docs generate && dbt docs serve
 
 ---
 
-## 📈 Streamlit Dashboard (En développement)
+## 📈 Streamlit Dashboard
 
 ### Objectif
-Dashboard interactif pour explorer les données d'export en **temps réel**.
+Dashboard interactif pour explorer les resultats d'export en temps reel.
 
-### Prévu
+### Implémente
 
 ```
 ┌─────────────────────────────────────┐
-│    STREAMLIT APP (À créer)          │
+│    STREAMLIT APP (local)            │
 ├─────────────────────────────────────┤
 │ 1. Filtres interactifs              │
 │    ├─ Année (2022-2025)             │
@@ -284,16 +284,25 @@ Dashboard interactif pour explorer les données d'export en **temps réel**.
 │                                     │
 │ 3. Exports interactifs              │
 │    ├─ Télécharger CSV filtré        │
-│    ├─ Copier tableau                │
-│    └─ Générer rapport PDF           │
+│    └─ Table détaillée filtrable     │
 └─────────────────────────────────────┘
 ```
 
-**📌 Lien Streamlit (futur)** : `https://your-streamlit-app.com`
+### Lancer en local
+
+```bash
+pip install -r requirements-streamlit.txt
+streamlit run streamlit_app.py
+```
+
+URL locale: http://localhost:8501
+
+### Lien Streamlit (futur)
+https://your-streamlit-app.com
 
 ### Technologies
 - **Framework** : Streamlit
-- **Source données** : `exports/fct_export_unifie.csv` (post-export GitHub Actions)
+- **Source données** : `outputs/pbi_region_repr.csv`, `outputs/pbi_women_oc_vs_insee.csv`, `outputs/pbi_trend_etu_year_total.csv`, `outputs/pbi_repartition_age_oc.csv`, `outputs/pbi_heat_region_gender.csv`
 - **Visualisations** : Plotly, Pandas
 - **Déploiement** : Streamlit Cloud ou Heroku
 

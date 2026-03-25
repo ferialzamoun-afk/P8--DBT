@@ -188,9 +188,9 @@ if ($rows.Count -eq 0) {
 
 $rows | Export-Csv -Path $outFile -NoTypeInformation -Encoding utf8
 
-Write-Host "   ✓ $($rows.Count) lignes exportées" -ForegroundColor Green
+Write-Host "   OK: $($rows.Count) rows exported" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "=== Export terminé ===" -ForegroundColor Cyan
+Write-Host "=== Export complete ===" -ForegroundColor Cyan
 Write-Host ""
 Get-Item $outFile | Format-Table Name, Length -AutoSize

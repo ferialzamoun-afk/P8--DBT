@@ -157,99 +157,48 @@ jobs:
           SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
           DBT_PROFILES_DIR: "."
         run: |
-          dbt show --profiles-dir . --target ci \
-            --quiet --select fct_export_unifie \
-            --output json --limit 2000000 \
-            > output/csv/fct_export_unifie.jsonl
-
           python - <<'PY'
           import csv
-          import json
+          import os
           from pathlib import Path
-          import sys
+          import snowflake.connector
 
-          src = Path("output/csv/fct_export_unifie.jsonl")
           dst = Path("output/csv/fct_export_unifie.csv")
+          database = os.environ["SNOWFLAKE_DATABASE"]
+          schema = os.environ["SNOWFLAKE_SCHEMA"]
 
-          def extract_rows(node, depth=0):
-              if depth > 10:
-                  return []
-              
-              if isinstance(node, list):
-                  if node and all(isinstance(item, dict) for item in node):
-                      rows = []
-                      for item in node:
-                          if isinstance(item, dict) and len(item) > 0:
-                              rows.append(item)
-                      if rows:
-                          return rows
-                  
-                  for item in node:
-                      rows = extract_rows(item, depth+1)
-                      if rows:
-                          return rows
-                  return []
+          conn = snowflake.connector.connect(
+            account=os.environ["SNOWFLAKE_ACCOUNT"],
+            user=os.environ["SNOWFLAKE_USER"],
+            password=os.environ["SNOWFLAKE_PASSWORD"],
+            role=os.environ["SNOWFLAKE_ROLE"],
+            warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+            database=database,
+            schema=schema,
+          )
 
-              if isinstance(node, dict):
-                  if "show" in node and node["show"]:
-                      rows = extract_rows(node["show"], depth+1)
-                      if rows:
-                          return rows
+          sql = f'SELECT * FROM "{database}"."{schema}"."FCT_EXPORT_UNIFIE"'
 
-                  rows = node.get("rows")
-                  cols = node.get("column_names") or node.get("columns")
-                  if isinstance(rows, list) and isinstance(cols, list):
-                      if rows and all(isinstance(r, list) for r in rows):
-                          return [dict(zip(cols, r)) for r in rows]
+          row_count = 0
+          cur = conn.cursor()
+          try:
+            cur.execute(sql)
+            columns = [desc[0] for desc in cur.description]
 
-                  data = node.get("data")
-                  if isinstance(data, list) and len(data) > 0:
-                      if all(isinstance(d, dict) for d in data):
-                          return data
+            with dst.open("w", encoding="utf-8", newline="") as fh:
+              writer = csv.writer(fh)
+              writer.writerow(columns)
+              while True:
+                chunk = cur.fetchmany(10000)
+                if not chunk:
+                  break
+                writer.writerows(chunk)
+                row_count += len(chunk)
+          finally:
+            cur.close()
+            conn.close()
 
-                  for key in ["results", "result", "rows", "records", "items"]:
-                      if key in node:
-                          rows = extract_rows(node[key], depth+1)
-                          if rows:
-                              return rows
-
-                  for value in node.values():
-                      if isinstance(value, (dict, list)):
-                          rows = extract_rows(value, depth+1)
-                          if rows:
-                              return rows
-
-              return []
-
-          rows = []
-          line_count = 0
-          with src.open("r", encoding="utf-8") as fh:
-              for line in fh:
-                  line = line.strip()
-                  if not line:
-                      continue
-                  line_count += 1
-                  try:
-                      payload = json.loads(line)
-                      rows = extract_rows(payload)
-                      if rows:
-                          print(f"Found {len(rows)} rows in JSON line {line_count}", file=sys.stderr)
-                          break
-                  except json.JSONDecodeError as e:
-                      print(f"JSON parse error on line {line_count}: {e}", file=sys.stderr)
-                      continue
-
-          if not rows:
-              print(f"Processed {line_count} JSON lines but found no tabular data", file=sys.stderr)
-              raise SystemExit("No tabular data found in dbt show JSON output")
-
-          fieldnames = list(rows[0].keys())
-          with dst.open("w", encoding="utf-8", newline="") as fh:
-              writer = csv.DictWriter(fh, fieldnames=fieldnames)
-              writer.writeheader()
-              writer.writerows(rows)
-          
-          print(f"Successfully wrote {len(rows)} rows to {dst}", file=sys.stderr)
+          print(f"Exported {row_count} rows to {dst}")
           PY
 
       - name: Upload CSV export

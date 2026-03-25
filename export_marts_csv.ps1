@@ -138,55 +138,27 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 
-# ── 2. Export en CSV via dbt show ─────────────────────────────────────────────
+
+Write-Host "[MODIF 2026-03-25] : Export direct CSV sans parsing JSON" -ForegroundColor Green
 Write-Host "▶ Export CSV  →  $outFile" -ForegroundColor Yellow
 
-$showOutput = & $dbt show `
+# Utilise dbt show --output csv pour écrire directement le CSV
+$showExitCode = 0
+& $dbt show `
     --project-dir $ScriptDir `
     --profiles-dir $ProfilesDir `
     --target dev_password `
     --quiet `
     --select $model `
-    --output json `
-    --limit $Limit 2>&1
+    --output csv `
+    --limit $Limit `
+    | Out-File -FilePath $outFile -Encoding utf8
+$showExitCode = $LASTEXITCODE
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Erreur lors de l'export du modèle $model."
+if ($showExitCode -ne 0) {
+    Write-Error "Erreur lors de l'export du modèle $model en CSV."
     exit 1
 }
-
-$jsonObjects = @()
-foreach ($line in $showOutput) {
-    if ([string]::IsNullOrWhiteSpace($line)) {
-        continue
-    }
-    try {
-        $jsonObjects += ($line | ConvertFrom-Json -Depth 100)
-    }
-    catch {
-        continue
-    }
-}
-
-if ($jsonObjects.Count -eq 0) {
-    Write-Error "Aucun JSON exploitable trouvé dans la sortie de dbt show."
-    exit 1
-}
-
-$rows = @()
-foreach ($obj in $jsonObjects) {
-    $rows = Get-DbtShowRows -Node $obj
-    if ($rows.Count -gt 0) {
-        break
-    }
-}
-
-if ($rows.Count -eq 0) {
-    Write-Error "Aucune donnée tabulaire trouvée dans la sortie JSON de dbt show."
-    exit 1
-}
-
-$rows | Export-Csv -Path $outFile -NoTypeInformation -Encoding utf8
 
 Write-Host "   OK: $($rows.Count) rows exported" -ForegroundColor Green
 

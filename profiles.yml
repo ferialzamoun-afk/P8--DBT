@@ -3,44 +3,40 @@
 # Ce fichier est versionné, il ne contient AUCUNE valeur en clair.
 
 ferial_profile:
-  target: "{{ env_var('DBT_TARGET', 'ci') }}"
+  target: dev
   outputs:
-
-    # ── Environnement local (externalbrowser) ──────────────────────────────────
     dev:
       type: snowflake
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
-      user:    "{{ env_var('SNOWFLAKE_USER') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
       authenticator: externalbrowser
-      role:      "{{ env_var('SNOWFLAKE_ROLE') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE') }}"
       warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
-      database:  "{{ env_var('SNOWFLAKE_DATABASE') }}"
-      schema:    "{{ env_var('SNOWFLAKE_SCHEMA') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+      schema: "{{ env_var('DBT_SNOWFLAKE_SCHEMA', 'DBT_CI') }}"
       threads: 4
 
-    # ── Environnement local / password (hors SSO navigateur) ─────────────────
     dev_password:
       type: snowflake
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
-      user:    "{{ env_var('SNOWFLAKE_USER') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
       password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
       authenticator: snowflake
-      role:      "{{ env_var('SNOWFLAKE_ROLE') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE') }}"
       warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
-      database:  "{{ env_var('SNOWFLAKE_DATABASE') }}"
-      schema:    "{{ env_var('SNOWFLAKE_SCHEMA') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+      schema: "{{ env_var('DBT_SNOWFLAKE_SCHEMA', 'DBT_CI') }}"
       threads: 4
 
-    # ── Environnement CI / password (GitHub Actions) ──────────────────────────
     ci:
       type: snowflake
       account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
-      user:    "{{ env_var('SNOWFLAKE_USER') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
       password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
       authenticator: snowflake
-      role:      "{{ env_var('SNOWFLAKE_ROLE') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE') }}"
       warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
-      database:  "{{ env_var('SNOWFLAKE_DATABASE') }}"
-      schema:    "{{ env_var('SNOWFLAKE_SCHEMA', 'DBT_CI') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+      schema: "{{ env_var('DBT_SNOWFLAKE_SCHEMA', 'DBT_CI') }}"
       threads: 4
       query_tag: github_actions

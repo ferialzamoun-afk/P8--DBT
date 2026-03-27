@@ -1,6 +1,7 @@
+{{ config(materialized='table') }}
 -- Mart de synthese : comparaison etudiants vs INSEE
 -- Grain: annee, region, genre
-{{ config(materialized='table') }}
+
 WITH joined_data AS (
     SELECT *
     FROM {{ ref('int_etudiants_insee_joined') }}

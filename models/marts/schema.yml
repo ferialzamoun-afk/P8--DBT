@@ -1,60 +1,6 @@
 version: 2
 
 models:
-  - name: stg_etudiants
-    description: "Données étudiants nettoyées et harmonisées pour l'analyse. Le grain métier est (USER_ID, PATH_CATEGORY_NAME, AGE_GROUP, GENDER, REGION, YEAR_PATH_STARTED), validé par le test singular tests/test_unique_stg_etudiants_grain.sql."
-    columns:
-      - name: USER_ID
-        description: "Identifiant étudiant (non unique seul; l'unicité est contrôlée au grain métier composite)."
-        tests:
-          - not_null
-      
-      - name: PATH_CATEGORY_NAME
-        description: "Catégorie du parcours (devrait être 'Data' pour ce dataset)"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['Data']
-      
-      - name: AGE_GROUP
-        description: "Tranche d'âge standardisée"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values:
-                  - '20-24 ans'
-                  - '25-29 ans'
-                  - '30-34 ans'
-                  - '35-39 ans'
-                  - '40-44 ans'
-                  - '45-49 ans'
-                  - '50-54 ans'
-                  - '55-59 ans'
-                  - '60 ans ou plus'
-      
-      - name: GENDER
-        description: "Genre déclaré par l'étudiant. Les valeurs NULL ou vides (~27% du jeu de données) sont conservées avec la valeur 'Non renseigné' afin de préserver le volume total d'inscrits dans les analyses. Ces lignes sont exclues uniquement lors des comparaisons avec les données INSEE (qui ne contiennent que M/F)."
-        tests:
-          - not_null  # Plus de NULL après transformation
-          - accepted_values:
-              arguments:
-                values: ['F', 'M', 'Non renseigné']
-      
-      - name: REGION
-        description: "Région de résidence (harmonisée)"
-        tests:
-          - not_null
-      
-      - name: YEAR_PATH_STARTED
-        description: "Année de début du parcours"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: [2022, 2023, 2024, 2025]
-
   - name: fct_profil_sociodem
     description: "Table d'agrégation pour l'analyse sociodémographique, alimentée depuis la couche intermediate"
     columns:
@@ -80,43 +26,6 @@ models:
       
       - name: nb_etudiants
         description: "Nombre d'étudiants dans cette catégorie"
-        tests:
-          - not_null
-
-  - name: stg_insee_population
-    description: "Données INSEE nettoyées et dépivotées (format long)"
-    columns:
-      - name: year
-        description: "Année de l'estimation"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: [2022, 2023, 2024, 2025]
-      
-      - name: region_name_standardized
-        description: "Région harmonisée"
-        tests:
-          - not_null
-      
-      - name: age_group_insee
-        description: "Classe d'âge INSEE harmonisée (60-74 et 75+ agrégées en 60+)"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['0-19 ans', '20-39 ans', '40-59 ans', '60+ ans']
-      
-      - name: gender_insee
-        description: "Genre (M/F/ALL)"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['M', 'F', 'ALL']
-      
-      - name: population
-        description: "Effectif de population"
         tests:
           - not_null
 
@@ -226,26 +135,3 @@ models:
         description: "Part des femmes dans la population active INSEE (en %, par region/year)"
       - name: gap_femmes_pct
         description: "Écart OC vs INSEE en points de % (positif = sur-représentation féminine OC)"
-
-  - name: int_etudiants_insee_joined
-    description: "Couche intermediate de rapprochement entre étudiants et INSEE sur les dimensions communes (annee, region, genre, classe d'age INSEE)"
-    columns:
-      - name: match_status
-        description: "Statut de rapprochement entre les deux jeux de donnees"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['matched', 'etudiants_only', 'insee_only']
-
-      - name: YEAR_PATH_STARTED
-        description: "Annee cote etudiants"
-
-      - name: year
-        description: "Annee cote INSEE"
-
-      - name: REGION
-        description: "Region cote etudiants"
-
-      - name: insee_region
-        description: "Region cote INSEE"

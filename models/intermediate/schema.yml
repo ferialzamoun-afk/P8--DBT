@@ -1,0 +1,26 @@
+
+  version: 2
+
+  models:
+  - name: int_etudiants_insee_joined
+    description: "Couche intermediate de rapprochement entre étudiants et INSEE sur les dimensions communes (annee, region, genre, classe d'age INSEE)"
+    columns:
+      - name: match_status
+        description: "Statut de rapprochement entre les deux jeux de donnees"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['matched', 'etudiants_only', 'insee_only']
+
+      - name: YEAR_PATH_STARTED
+        description: "Annee cote etudiants"
+
+      - name: year
+        description: "Annee cote INSEE"
+
+      - name: REGION
+        description: "Region cote etudiants"
+
+      - name: insee_region
+        description: "Region cote INSEE"

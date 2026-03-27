@@ -29,43 +29,6 @@ models:
         tests:
           - not_null
 
-  - name: stg_insee_population
-    description: "Données INSEE nettoyées et dépivotées (format long)"
-    columns:
-      - name: year
-        description: "Année de l'estimation"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: [2022, 2023, 2024, 2025]
-      
-      - name: region_name_standardized
-        description: "Région harmonisée"
-        tests:
-          - not_null
-      
-      - name: age_group_insee
-        description: "Classe d'âge INSEE harmonisée (60-74 et 75+ agrégées en 60+)"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['0-19 ans', '20-39 ans', '40-59 ans', '60+ ans']
-      
-      - name: gender_insee
-        description: "Genre (M/F/ALL)"
-        tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: ['M', 'F', 'ALL']
-      
-      - name: population
-        description: "Effectif de population"
-        tests:
-          - not_null
-
   - name: fct_insee_par_region_age
     description: "Table INSEE agrégée par région, année, âge et genre, alimentée depuis la couche intermediate"
     columns:

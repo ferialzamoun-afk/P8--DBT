@@ -1,6 +1,7 @@
 -- Couche intermediate : jointure étudiants / INSEE
 -- Objectif : centraliser la logique de rapprochement sur des dimensions communes
 -- (annee, region, genre, classe d'age INSEE) avant exposition en marts.
+{{ config(materialized='table') }}
 
 WITH etudiants AS (
     SELECT

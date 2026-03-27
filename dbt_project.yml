@@ -18,6 +18,7 @@ clean-targets:
 
 models:
   p8_dbt:
+    +schema: analytics
     +materialized: view
     staging:
       +materialized: view

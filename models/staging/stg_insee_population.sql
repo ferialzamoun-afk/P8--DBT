@@ -44,48 +44,20 @@ cleaned AS (
         TRY_TO_NUMBER(year) AS year,
         region_code,
         region_name,
-        -- Normaliser les variantes accent/tiret/casse pour fiabiliser les jointures inter-couches
         CASE
             WHEN is_drom = 1 THEN 'DROM'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) IN ('GUADELOUPE', 'MARTINIQUE', 'REUNION', 'LAREUNION', 'GUYANE', 'DOM', 'DROM')
-                THEN 'DROM'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) = 'AUVERGNERHONEALPES'
+            WHEN TRIM(region_name) IN ('Auvergne-Rhone-Alpes', 'Auvergne-Rhône-Alpes')
                 THEN 'Auvergne-Rhône-Alpes'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) = 'BOURGOGNEFRANCHECOMTE'
+            WHEN TRIM(region_name) IN ('Bourgogne-Franche-Comte', 'Bourgogne-Franche-Comté')
                 THEN 'Bourgogne-Franche-Comté'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) = 'CENTREVALDELOIRE'
-                THEN 'Centre-Val-de-Loire'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) = 'GRANDEST'
+            WHEN region_name = 'Centre-Val de Loire' THEN 'Centre-Val-de-Loire'
+            WHEN TRIM(region_name) IN ('Grand-Est', 'Grand Est')
                 THEN 'Grand Est'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) = 'ILEDEFRANCE'
+            WHEN TRIM(region_name) IN ('Ile-de-France', 'Île-de-France')
                 THEN 'Île-de-France'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) = 'PAYSDELALOIRE'
+            WHEN TRIM(region_name) IN ('Pays-de-la-Loire', 'Pays de la Loire')
                 THEN 'Pays de la Loire'
-            WHEN REGEXP_REPLACE(
-                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM(region_name)), 'À', 'A'), 'Â', 'A'), 'Ä', 'A'), 'Ç', 'C'), 'É', 'E'), 'È', 'E'), 'Ê', 'E'), 'Ë', 'E'), 'Î', 'I'), 'Ï', 'I'), 'Ô', 'O'), 'Ö', 'O'), 'Ù', 'U'), 'Û', 'U'), 'Ü', 'U'), 'Œ', 'OE'),
-                '[^A-Z0-9]', ''
-            ) = 'PROVENCEALPESCOTEDAZUR'
+            WHEN TRIM(region_name) IN ('Provence-Alpes-Cote-d-Azur', 'Provence-Alpes-Côte d''Azur')
                 THEN 'Provence-Alpes-Côte d''Azur'
             ELSE NULLIF(TRIM(region_name), '')
         END AS region_name_standardized,

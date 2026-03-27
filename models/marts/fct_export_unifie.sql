@@ -1,10 +1,10 @@
 -- Mart d'export unifié : toutes les dimensions en une seule table
 -- Grain : (year, region, age_group, gender)
--- Contient : nb_etudiants, population_insee, pct_femmes, gap
+-- Contient : nb_etudiants, population_insee, pct_femmes, gap, part_oc,part_insee, ecart_representation
 -- Ce modèle remplace les 3 exports séparés pour une distribution CSV unique.
 {{ config(materialized='table') }}
 
-WITH source AS (
+WITH src AS (
     SELECT * FROM {{ ref('int_etudiants_insee_joined') }}
 ),
 
@@ -18,7 +18,7 @@ etu AS (
         GENDER                                      AS gender,
         PATH_CATEGORY_NAME,
         COUNT(DISTINCT USER_ID)                     AS nb_etudiants
-    FROM source
+    FROM src
     WHERE USER_ID IS NOT NULL
     GROUP BY 1, 2, 3, 4, 5, 6
 ),
@@ -31,7 +31,7 @@ etu_all AS (
         AGE_GROUP                                   AS age_group,
         AGE_GROUP_INSEE                             AS age_group_insee,
         COUNT(DISTINCT USER_ID)                     AS nb_inscrits_tous_genres
-    FROM source
+    FROM src
     WHERE USER_ID IS NOT NULL
     GROUP BY 1, 2, 3, 4
 ),
@@ -45,7 +45,7 @@ insee AS (
         insee_gender                                AS gender,
         population_insee,
         nb_departments
-    FROM source
+    FROM src
     WHERE year IS NOT NULL
       AND population_insee IS NOT NULL
       AND insee_gender IN ('M', 'F')
@@ -136,7 +136,24 @@ SELECT
         100.0 * nb_etu_f_region   / NULLIF(total_etu_region,   0)
       - 100.0 * nb_insee_f_region / NULLIF(total_insee_region, 0),
         2
-    )                                                  AS gap_femmes_pct
+    )                                                  AS gap_femmes_pct,
+    -- Part OC (tous genres) dans la région/année
+    ROUND(
+        1.0 * nb_inscrits_tous_genres / NULLIF(total_etu_region, 0),
+        6
+    ) AS part_oc,
 
+    -- Part INSEE (tous genres) dans la région/année
+    ROUND(
+        1.0 * population_insee / NULLIF(total_insee_region, 0),
+        6
+    ) AS part_insee,
+
+    -- Écart de représentation globale (points de %)
+    ROUND(
+        100.0 * nb_inscrits_tous_genres / NULLIF(total_etu_region, 0)
+      - 100.0 * population_insee / NULLIF(total_insee_region, 0),
+        2
+    ) AS ecart_representation
 FROM with_metrics
 ORDER BY year DESC, region, age_group, gender

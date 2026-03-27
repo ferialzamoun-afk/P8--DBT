@@ -46,9 +46,21 @@ dist/
 build/
 
 # dbt
+# DBT build artifacts
 target/
 dbt_packages/
 logs/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# DBT local config
+profiles.yml
+.env
+
+# VSCode settings (optionnel)
+.vscode/
 
 # IDE
 .vscode/

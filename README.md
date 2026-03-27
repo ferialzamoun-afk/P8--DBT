@@ -302,7 +302,7 @@ https://your-streamlit-app.com
 
 ### Technologies
 - **Framework** : Streamlit
-- **Source données** : `outputs/pbi_region_repr.csv`, `outputs/pbi_women_oc_vs_insee.csv`, `outputs/pbi_trend_etu_year_total.csv`, `outputs/pbi_repartition_age_oc.csv`, `outputs/pbi_heat_region_gender.csv`
+- **Source données** : `exports/fct_export_unifie.csv` (source unique consolidée)
 - **Visualisations** : Plotly, Pandas
 - **Déploiement** : Streamlit Cloud ou Heroku
 
@@ -339,17 +339,17 @@ P8/
 │   └── target/                           ← Artifacts générés
 │
 ├── exports/                              ← CSVs exportés
-│   ├── fct_export_unifie.csv             ← PRINCIPAL
+│   ├── fct_export_unifie.csv             ← PRINCIPAL (source unique pour Streamlit et Power BI)
 │   ├── fct_profil_sociodem.csv
 │   ├── fct_summary_analysis.csv
 │   ├── stg_etudiants.csv
 │   └── stg_insee_population.csv
 │
-├── outputs/                              ← Résultats analytiques
-│   ├── pbi_*.csv                         ← Données Power BI
+├── outputs/                              ← (anciens exports analytiques, non utilisés)
+│   ├── pbi_*.csv                         ← (déprécié)
 │   ├── etudiants_clean.csv
 │   ├── insee_clean.csv
-│   └── [12 autres exports]
+│   └── [anciens exports]
 │
 ├── logs/                                 ← Logs d'exécution
 ├── load-env.ps1                          ← Setup local (Windows)

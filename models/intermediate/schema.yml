@@ -1,7 +1,7 @@
 
-  version: 2
+version: 2
 
-  models:
+models:
   - name: int_etudiants_insee_joined
     description: "Couche intermediate de rapprochement entre étudiants et INSEE sur les dimensions communes (annee, region, genre, classe d'age INSEE)"
     columns:

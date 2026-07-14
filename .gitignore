@@ -21,6 +21,8 @@ profiles.yml.local
 # Local outputs and temporary files
 output/
 outputs/
+docs/
+notebook/
 *.pyc
 __pycache__/
 .pytest_cache/

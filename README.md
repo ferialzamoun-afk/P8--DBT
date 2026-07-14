@@ -332,24 +332,23 @@ P8/
 │   │       └── fct_export_unifie.sql
 │   ├── tests/                            ← Tests dbt
 │   │   └── test_unique_stg_etudiants_grain.sql
-│   ├── src/                              ← Sources brutes
-│   │   ├── DATASET...csv
-│   │   ├── insee_population_enrichi.csv
-│   │   └── snowflake_import*.sql
+│   ├── src/                              ← Scripts/utilitaires
+│   │   ├── enrich_insee_population.py
+│   │   ├── extract_insee_population.py
+│   │   └── build_pbi_unified_export.py
 │   └── target/                           ← Artifacts générés
 │
-├── exports/                              ← CSVs exportés
-│   ├── fct_export_unifie.csv             ← PRINCIPAL
-│   ├── fct_profil_sociodem.csv
-│   ├── fct_summary_analysis.csv
-│   ├── stg_etudiants.csv
-│   └── stg_insee_population.csv
-│
-├── outputs/                              ← Résultats analytiques
-│   ├── pbi_*.csv                         ← Données Power BI
-│   ├── etudiants_clean.csv
-│   ├── insee_clean.csv
-│   └── [12 autres exports]
+├── data/                                 ← Données centralisées
+│   ├── raw/                              ← Sources brutes (fichiers d'origine)
+│   │   ├── Estimation_popu_2025_dpt_sexe_classe_age.xlsx
+│   │   ├── fr-esr-referentiel-geographique.csv
+│   │   └── geo_ref_template_for_snowflake.csv
+│   └── processed/                        ← Données transformées/enrichies
+│       ├── fct_export_unifie.csv         ← PRINCIPAL (dbt export)
+│       ├── 5-Profil_sociodemo_output_csv_2026-03-20-1903.csv
+│       ├── 6-Comparaison_insee_region_age_genre_2026-03-20-1909.csv
+│       ├── insee_population_enrichi.csv
+│       └── insee_population_departements_wide_2022_2025.csv
 │
 ├── logs/                                 ← Logs d'exécution
 ├── load-env.ps1                          ← Setup local (Windows)

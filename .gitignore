@@ -1,6 +1,41 @@
-# you shouldn't commit these into source control
-# these are the default directory names, adjust/add to fit your needs
+# DBT default directories
 target/
 dbt_packages/
 logs/
 dbt_internal_packages/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment variables
+.env
+.env.local
+
+# dbt local config
+.user.yml
+profiles.yml.local
+
+# Local outputs and temporary files
+output/
+outputs/
+*.pyc
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+desktop.ini
+
+# Private subdirectories (separate repos)
+P8--DBT/

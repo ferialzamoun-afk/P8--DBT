@@ -139,6 +139,9 @@ jobs:
       - name: Install dbt-snowflake
         run: pip install dbt-snowflake==1.11.3
 
+      - name: Install snowflake-connector-python
+        run: pip install snowflake-connector-python
+
       - name: dbt deps
         run: dbt deps
 

@@ -30,6 +30,20 @@ Ce projet analyse la **représentativité des étudiants OpenClassrooms** par ra
 
 ---
 
+## 📋 Proof Point : Vue Client/Recruteur
+
+**Pour qui ?** Cette section synthétise le projet avec l'angle *décideur métier* (direction RH/marketing OC).
+
+| Pilier | Résumé |
+|--------|--------|
+| **1️⃣ Besoin Métier** | OC cherche à comprendre sa couverture géographique vs population française. Enjeu RH/marketing : recruter sur régions sous-représentées, cibler groupes d'âge oubliés. |
+| **2️⃣ Données** | **Sources** : OC (2022-2025, plateforme) + INSEE (pop. région/genre/âge). **Qualité** : ✅ Brutes complètes / Harmonisées. **Limites** : Pas de données OC pré-2022 ; INSEE lag post-2024 ; pas dissimulation genre. |
+| **3️⃣ Démarche** | **Stack** : dbt 1.11.3 (reproductibilité + tests) → Snowflake (OLAP cloud) → GitHub Actions (CI/CD native). **Pipeline** : Raw CSV → Staging (nettoyage/harmonisation région/genre) → Intermediate (FULL JOIN) → Marts (export unifiée) → BI/Streamlit. |
+| **4️⃣ Résultats** | **KPIs** : Taux pénétration OC 2.3% (France) ; Gap régional Île-de-France 5.1% vs Auvergne 1.9% ; +4% femmes. **Recommandations** : Doublement effort Sud (Occitanie, HdF) ; cibler 20-29 ans. **Livrable** : CSV export (633 lignes) vers Power BI / Streamlit. |
+| **5️⃣ Limites** | OC data anonyme (pas socio-démo) ; INSEE lag estimations ; analyse descriptive. **Prochaines pistes** : Cohorte temporelle + prédictions ; tableau temps réel Streamlit ; comparaison concurrents. |
+
+---
+
 ## 🏗️ Architecture & Méthodologie
 
 ### Stack technique

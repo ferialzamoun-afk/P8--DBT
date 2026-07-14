@@ -109,8 +109,6 @@ jobs:
             target/manifest.json
             target/parsed_models.json
           retention-days: 30
-            target/manifest.json
-          retention-days: 30
 
   export-csv:
     name: "Export marts -> CSV (requires Snowflake access)"

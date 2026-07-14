@@ -135,7 +135,7 @@ jobs:
         run: dbt deps
 
       - name: Ensure export folder exists
-        run: mkdir -p ../data/processed
+        run: mkdir -p data/processed
 
       - name: dbt run (staging + intermediate + marts)
         env: &snowflake_env_export
@@ -168,7 +168,7 @@ jobs:
           from pathlib import Path
           import snowflake.connector
 
-          dst = Path("../data/processed/fct_export_unifie.csv")
+          dst = Path("data/processed/fct_export_unifie.csv")
           database = os.environ["SNOWFLAKE_DATABASE"]
           schema = os.environ["SNOWFLAKE_SCHEMA"]
 
@@ -210,5 +210,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: marts-csv-${{ github.run_id }}
-          path: ../data/processed/fct_export_unifie.csv
+          path: data/processed/fct_export_unifie.csv
           retention-days: 90

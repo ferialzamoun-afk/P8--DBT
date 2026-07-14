@@ -302,7 +302,7 @@ https://your-streamlit-app.com
 
 ### Technologies
 - **Framework** : Streamlit
-- **Source données** : `exports/fct_export_unifie.csv` (source unique consolidée)
+- **Source données** : `outputs/pbi_region_repr.csv`, `outputs/pbi_women_oc_vs_insee.csv`, `outputs/pbi_trend_etu_year_total.csv`, `outputs/pbi_repartition_age_oc.csv`, `outputs/pbi_heat_region_gender.csv`
 - **Visualisations** : Plotly, Pandas
 - **Déploiement** : Streamlit Cloud ou Heroku
 
@@ -332,24 +332,23 @@ P8/
 │   │       └── fct_export_unifie.sql
 │   ├── tests/                            ← Tests dbt
 │   │   └── test_unique_stg_etudiants_grain.sql
-│   ├── src/                              ← Sources brutes
-│   │   ├── DATASET...csv
-│   │   ├── insee_population_enrichi.csv
-│   │   └── snowflake_import*.sql
+│   ├── src/                              ← Scripts/utilitaires
+│   │   ├── enrich_insee_population.py
+│   │   ├── extract_insee_population.py
+│   │   └── build_pbi_unified_export.py
 │   └── target/                           ← Artifacts générés
 │
-├── exports/                              ← CSVs exportés
-│   ├── fct_export_unifie.csv             ← PRINCIPAL (source unique pour Streamlit et Power BI)
-│   ├── fct_profil_sociodem.csv
-│   ├── fct_summary_analysis.csv
-│   ├── stg_etudiants.csv
-│   └── stg_insee_population.csv
-│
-├── outputs/                              ← (anciens exports analytiques, non utilisés)
-│   ├── pbi_*.csv                         ← (déprécié)
-│   ├── etudiants_clean.csv
-│   ├── insee_clean.csv
-│   └── [anciens exports]
+├── data/                                 ← Données centralisées
+│   ├── raw/                              ← Sources brutes (fichiers d'origine)
+│   │   ├── Estimation_popu_2025_dpt_sexe_classe_age.xlsx
+│   │   ├── fr-esr-referentiel-geographique.csv
+│   │   └── geo_ref_template_for_snowflake.csv
+│   └── processed/                        ← Données transformées/enrichies
+│       ├── fct_export_unifie.csv         ← PRINCIPAL (dbt export)
+│       ├── 5-Profil_sociodemo_output_csv_2026-03-20-1903.csv
+│       ├── 6-Comparaison_insee_region_age_genre_2026-03-20-1909.csv
+│       ├── insee_population_enrichi.csv
+│       └── insee_population_departements_wide_2022_2025.csv
 │
 ├── logs/                                 ← Logs d'exécution
 ├── load-env.ps1                          ← Setup local (Windows)
